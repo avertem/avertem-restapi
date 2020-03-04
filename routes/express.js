@@ -66,6 +66,9 @@ module.exports = (app) => {
             
             let hash = sha256.create();
             hash.update('Message2 to hash');
+            hash.update(new Date().toISOString());
+            hash.update(Math.random().toString(36).substring(7));
+
             let hashBuffer = new Buffer(hash.arrayBuffer())
             let hashHex = hashBuffer.toString("hex");
             let signature = keyLoader().sign(hashHex,"buffer","hex");
