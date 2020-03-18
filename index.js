@@ -1,4 +1,5 @@
 var bodyParser = require('body-parser');
+var proxy = require('express-http-proxy');
 var express = require('express');
 var session = require('express-session');
 const fetch = require('node-fetch');
@@ -15,6 +16,12 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bearerToken());
+
+// setup the proxy information
+app.use('/query/',proxy(process.env.AVERTEM_SERVER,{
+    preserveHostHdr: true,
+    parseReqBody: false
+  }));
 
 let server;
 (async () => {

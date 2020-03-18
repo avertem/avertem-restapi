@@ -78,7 +78,7 @@ module.exports = (app) => {
                 method: 'get',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Accept': 'application/json',                  
+                  'Accept': 'application/json',             
                 }});
             //console.log("The result of the query is [%o]",authenticateSession);
             let result = await authenticateSession.json();
@@ -105,6 +105,43 @@ module.exports = (app) => {
             throw error;
         }
     }
+
+    const getLatestBlocks = async function(session) {
+        try {
+            let blockRequest = await fetch(`${process.env.AVERTEM_SERVER}/explorer/cors/block/latest/`, {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'session_hash': session},
+                rejectUnauthorized: false
+            });
+            let result = await blockRequest.json();
+            return result;
+        } catch (error) {
+            console.log(`Failed to get the blocks [${error}]`);
+            throw error;
+        }
+    }
+
+    const getProducers = async function(session) {
+        try {
+            let producerRequest = await fetch(`${process.env.AVERTEM_SERVER}/explorer/cors/producer/`, {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'session_hash': session},
+                rejectUnauthorized: false
+            });
+            let result = await producerRequest.json();
+            console.log("The result is [%o]",result);
+            return result;
+        } catch (error) {
+            console.log(`Failed to get the blocks [${error}]`);
+            throw error;
+        }
+    }
   
     app.post('/account/create', setNoCache, async (req, res, next) => {
         console.log("The account create")
@@ -127,8 +164,8 @@ module.exports = (app) => {
 
         let transaction = new AvertemTransaction(keyLoader(),process.env.AVERTEM_INITIAL_ACCOUNT_VALUE,account,
             process.env.AVERTEM_ACCOUNT,account, {
-                contract: 'DEA8E695ECDD055EF0820342AA65E7D2BCB34EAE1D29D8E060BC14262968A8B5',
-                contractName: 'account_management_contract',
+                contract: 'BB2DBC44D90DCA25D2F10D09E173A89E876C3ABBE7D9C6BD118FCBE0EFA0E5F9',
+                contractName: 'avertem__account_management_contract',
                 model:{subjects :[
                     {
                         subject: `http://keto-coin.io/schema/rdf/1.0/keto/Account#Account/${account}`,
@@ -255,6 +292,54 @@ module.exports = (app) => {
             account_id: req.body.account
           }));
     });
+
+    
+    app.get('/explorer/blocks', setNoCache, async (req, res, next) => {
+        console.log("The account create")
+        console.log("The body [%o]",req.body);
+        console.log("The token [%o]",req.token);
+        console.log("The token [%o]",process.env.AVERTEM_TOKEN);
+
+        if (process.env.AVERTEM_TOKEN != req.token) {
+            res.status(401);
+            return res.end('Invalid token');
+        }
+
+        let session = await authenticate();
+
+        let blocks = await getLatestBlocks(session);
+
+        console.log("Blocks are [%o]",blocks);
+
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify(
+            blocks
+          ));
+
+    })
+
+    app.get('/explorer/producer', setNoCache, async (req, res, next) => {
+        console.log("The account create")
+        console.log("The body [%o]",req.body);
+        console.log("The token [%o]",req.token);
+        console.log("The token [%o]",process.env.AVERTEM_TOKEN);
+
+        if (process.env.AVERTEM_TOKEN != req.token) {
+            res.status(401);
+            return res.end('Invalid token');
+        }
+
+        let session = await authenticate();
+
+        let producers = await getProducers(session);
+        console.log("Producers are [%o]",producers);
+
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify(
+            producers
+          ));
+
+    })
 
     app.use((err, req, res, next) => {
         if (err instanceof SessionNotFound) {

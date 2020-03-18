@@ -19,6 +19,7 @@
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "express-bearer-token": "^2.4.0",
+    "express-http-proxy": "^1.6.0",
     "express-session": "^1.17.0",
     "file-reader": "^1.1.1",
     "helmet": "^3.21.3",
